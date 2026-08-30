@@ -1,0 +1,6 @@
+{
+  "name": "MBG Keuangan & Kasir SPPG",
+  "description": "Aplikasi PWA pencatatan keuangan dan pengeluaran operasional harian Satuan Pelayanan Pemenuhan Gizi (MBG) terintegrasi Google Sheets.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
