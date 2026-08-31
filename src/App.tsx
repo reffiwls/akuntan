@@ -26,6 +26,7 @@ import { ReportTab } from './components/ReportTab';
 import { GasSyncModal } from './components/GasSyncModal';
 import { TransactionDetailModal } from './components/TransactionDetailModal';
 import { EditTransactionModal } from './components/EditTransactionModal';
+import { SmartExcelImportModal } from './components/SmartExcelImportModal';
 import { Toast } from './components/Toast';
 import { PrintableReport } from './components/PrintableReport';
 
@@ -38,6 +39,7 @@ export default function App() {
 
   // Modals state
   const [isGasModalOpen, setIsGasModalOpen] = useState<boolean>(false);
+  const [isSmartImportOpen, setIsSmartImportOpen] = useState<boolean>(false);
   const [viewingTransaction, setViewingTransaction] = useState<Transaction | null>(null);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
@@ -142,6 +144,32 @@ export default function App() {
     if (!inputAgain) {
       setActiveTab('history');
     }
+  };
+
+  // Batch import from Smart AI modal
+  const handleBatchImport = (
+    newItems: Array<Omit<Transaction, 'id' | 'createdAt' | 'syncStatus'>>
+  ) => {
+    const now = Date.now();
+    const createdList: Transaction[] = newItems.map((item, idx) => {
+      const dateFormatted = item.tanggal.replace(/-/g, '');
+      const randomSuffix = Math.floor(1000 + Math.random() * 9000) + idx;
+      return {
+        ...item,
+        id: `MBG-${dateFormatted}-${randomSuffix}`,
+        createdAt: new Date(now + idx * 10).toISOString(),
+        syncStatus: 'pending'
+      };
+    });
+
+    setTransactions((prev) => [...createdList, ...prev]);
+    showToast(
+      'Import AI Berhasil',
+      `${createdList.length} transaksi belanja berhasil dimasukkan ke pembukuan.`,
+      'success'
+    );
+
+    setActiveTab('history');
   };
 
   // Update existing transaction
@@ -272,7 +300,7 @@ export default function App() {
   const pendingCount = transactions.filter((t) => t.syncStatus === 'pending').length;
 
   return (
-    <div className="min-h-screen bg-[#f6f8f6] text-[#0d2319] flex flex-col font-sans selection:bg-emerald-600 selection:text-white">
+    <div className="min-h-screen bg-[#F3F6F4] text-slate-900 flex flex-col font-sans selection:bg-emerald-700 selection:text-white">
       {/* Printable Report Document (Only visible during window.print()) */}
       <PrintableReport
         transactions={printConfig ? printConfig.transactions : transactions}
@@ -294,11 +322,12 @@ export default function App() {
           isSyncing={isSyncing}
           onSyncClick={handlePushToGas}
           onOpenSettings={() => setIsGasModalOpen(true)}
+          onOpenSmartImport={() => setIsSmartImportOpen(true)}
         />
       </div>
 
       {/* Main Tab Views */}
-      <main className="flex-1 max-w-4xl w-full mx-auto px-3.5 sm:px-6 pt-2 pb-6 print:hidden">
+      <main className="flex-1 max-w-md w-full mx-auto px-3.5 sm:px-4 pt-2 pb-6 print:hidden">
         {activeTab === 'dashboard' && (
           <DashboardTab
             transactions={transactions}
@@ -310,6 +339,7 @@ export default function App() {
             onSync={handlePushToGas}
             isSyncing={isSyncing}
             onShareWhatsApp={handleShareWhatsApp}
+            onOpenSmartImport={() => setIsSmartImportOpen(true)}
           />
         )}
 
@@ -317,6 +347,7 @@ export default function App() {
           <ExpenseFormTab
             onSave={handleSaveTransaction}
             cashierName={settings.cashierName}
+            onOpenSmartImport={() => setIsSmartImportOpen(true)}
           />
         )}
 
@@ -363,6 +394,13 @@ export default function App() {
           onPushToGas={handlePushToGas}
           isSyncing={isSyncing}
           onShowToast={showToast}
+        />
+
+        {/* Smart AI Excel/Text Import Modal */}
+        <SmartExcelImportModal
+          isOpen={isSmartImportOpen}
+          onClose={() => setIsSmartImportOpen(false)}
+          onImportDone={handleBatchImport}
         />
 
         {/* Transaction Detail Modal */}

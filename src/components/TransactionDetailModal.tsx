@@ -71,7 +71,7 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
             </h4>
             <div className="flex items-baseline justify-between mt-2 pt-2 border-t border-[#e2e8e2]">
               <span className="text-stone-500 font-medium">Total Pengeluaran:</span>
-              <span className="text-xl font-extrabold text-[#0d2319] font-mono">
+              <span className="text-xl font-black text-slate-900 tracking-tight">
                 {formatRupiah(transaction.total)}
               </span>
             </div>

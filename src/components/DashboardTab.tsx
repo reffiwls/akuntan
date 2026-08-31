@@ -1,29 +1,26 @@
 import React, { useState } from 'react';
-import { AppSettings, Transaction } from '../types';
+import { AppSettings, Transaction, ExpenseCategory } from '../types';
 import {
   formatRupiah,
   formatDateIndo,
-  formatDateShort,
-  getCategoryBadgeStyle,
   generateWhatsAppReport
 } from '../utils/formatters';
 import {
-  TrendingUp,
-  Wallet,
   Calendar,
-  Layers,
-  ArrowUpRight,
-  Plus,
-  RefreshCw,
-  Share2,
   ChevronRight,
   ReceiptText,
   CreditCard,
   Banknote,
-  CheckCircle2,
+  UtensilsCrossed,
+  TrendingUp,
   Clock,
+  Share2,
+  Package,
   Sparkles,
-  UtensilsCrossed
+  ShoppingBag,
+  Flame,
+  Users,
+  Truck
 } from 'lucide-react';
 
 interface DashboardTabProps {
@@ -36,19 +33,65 @@ interface DashboardTabProps {
   onSync: () => void;
   isSyncing: boolean;
   onShareWhatsApp: (text: string) => void;
+  onOpenSmartImport?: () => void;
 }
 
 type PeriodFilter = 'today' | '7days' | 'month' | 'all';
+
+// Helper for category-based pastel circle icons
+const getCategoryIconDetails = (kategori: ExpenseCategory) => {
+  switch (kategori) {
+    case 'Bahan Baku Segar':
+      return {
+        icon: ShoppingBag,
+        bg: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+        labelBg: 'bg-emerald-50 text-emerald-800 border-emerald-200/70'
+      };
+    case 'Sembako & Bumbu':
+      return {
+        icon: Package,
+        bg: 'bg-amber-50 text-amber-700 border-amber-100',
+        labelBg: 'bg-amber-50 text-amber-800 border-amber-200/70'
+      };
+    case 'Kemasan & Wadah':
+      return {
+        icon: Package,
+        bg: 'bg-blue-50 text-blue-700 border-blue-100',
+        labelBg: 'bg-blue-50 text-blue-800 border-blue-200/70'
+      };
+    case 'Operasional Dapur':
+      return {
+        icon: Flame,
+        bg: 'bg-orange-50 text-orange-700 border-orange-100',
+        labelBg: 'bg-orange-50 text-orange-800 border-orange-200/70'
+      };
+    case 'Upah Tenaga Kerja / Harian':
+      return {
+        icon: Users,
+        bg: 'bg-teal-50 text-teal-700 border-teal-100',
+        labelBg: 'bg-teal-50 text-teal-800 border-teal-200/70'
+      };
+    case 'Logistik & Distribusi':
+      return {
+        icon: Truck,
+        bg: 'bg-sky-50 text-sky-700 border-sky-100',
+        labelBg: 'bg-sky-50 text-sky-800 border-sky-200/70'
+      };
+    default:
+      return {
+        icon: ReceiptText,
+        bg: 'bg-slate-50 text-slate-700 border-slate-200',
+        labelBg: 'bg-slate-50 text-slate-800 border-slate-200'
+      };
+  }
+};
 
 export const DashboardTab: React.FC<DashboardTabProps> = ({
   transactions,
   settings,
   onNavigateToInput,
   onNavigateToHistory,
-  onNavigateToReports,
   onSelectTransaction,
-  onSync,
-  isSyncing,
   onShareWhatsApp
 }) => {
   const [period, setPeriod] = useState<PeriodFilter>('today');
@@ -111,25 +154,40 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
   };
 
   return (
-    <div className="space-y-4 pb-28 pt-1">
-      {/* Top Banner: Date & Period Selector */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-white rounded-2xl border border-[#e2e8e2] p-3.5 shadow-soft-sm">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center flex-shrink-0">
-            <Calendar className="w-4 h-4" />
+    <div className="space-y-3.5 pb-32 pt-1 max-w-md mx-auto">
+      {/* Date & Period Selector Header */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-3.5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center flex-shrink-0">
+              <Calendar className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                {formatDateIndo(todayStr)}
+              </p>
+              <h2 className="text-xs font-bold text-slate-800">
+                Ringkasan Kas Operasional
+              </h2>
+            </div>
           </div>
-          <div>
-            <p className="text-[11px] font-semibold text-stone-500 uppercase tracking-wider">
-              {formatDateIndo(todayStr)}
-            </p>
-            <p className="text-xs font-bold text-[#0d2319]">
-              Ringkasan Kas & Pengeluaran Dapur
-            </p>
-          </div>
+
+          <button
+            onClick={() =>
+              onShareWhatsApp(
+                generateWhatsAppReport(filteredTransactions, settings.unitName, getPeriodLabel())
+              )
+            }
+            className="p-2 text-slate-500 hover:text-slate-800 bg-slate-100/80 hover:bg-slate-200/80 rounded-xl transition-all active:scale-95"
+            title="Bagikan Rekap WhatsApp"
+            aria-label="Bagikan Rekap WhatsApp"
+          >
+            <Share2 className="w-4 h-4" />
+          </button>
         </div>
 
         {/* Period Filter Pills */}
-        <div className="grid grid-cols-4 gap-1 p-1 bg-[#f0f4f0] rounded-xl text-xs font-semibold">
+        <div className="grid grid-cols-4 gap-1 p-1 bg-[#F3F6F4] rounded-xl text-xs font-semibold">
           {[
             { id: 'today', label: 'Hari Ini' },
             { id: '7days', label: '7 Hari' },
@@ -140,10 +198,10 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
               key={p.id}
               id={`filter-period-${p.id}`}
               onClick={() => setPeriod(p.id as PeriodFilter)}
-              className={`py-1.5 px-2 text-center rounded-lg transition-all duration-150 text-[11px] font-bold ${
+              className={`py-1.5 px-1.5 text-center rounded-lg transition-all text-[11px] font-bold ${
                 period === p.id
-                  ? 'bg-white text-[#0d2319] shadow-soft-xs'
-                  : 'text-stone-600 hover:text-[#0d2319]'
+                  ? 'bg-white text-slate-900 shadow-xs border border-slate-200/60'
+                  : 'text-slate-500 hover:text-slate-800'
               }`}
             >
               {p.label}
@@ -152,190 +210,184 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
         </div>
       </div>
 
-      {/* Main Financial Hero Card */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-[#0d2319] via-[#143527] to-[#0a1b13] rounded-3xl p-5 sm:p-6 text-white shadow-soft-lg border border-[#1a3e32]">
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-          <div className="space-y-1">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-950/90 border border-emerald-600/50 text-[11px] font-semibold text-emerald-300">
-              <Sparkles className="w-3 h-3 text-emerald-400" />
+      {/* 1 Main Hero Metric Card: Solid Deep Forest (#0D281E) */}
+      <div className="relative overflow-hidden bg-[#0D281E] rounded-3xl p-5 text-white shadow-[0_12px_32px_rgba(13,40,30,0.35)] border border-[#1A3E32]">
+        <div className="relative z-10 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-600/40 text-[11px] font-semibold text-emerald-300">
+              <TrendingUp className="w-3 h-3 text-emerald-400" />
               <span>Total Pengeluaran ({getPeriodLabel()})</span>
-            </div>
+            </span>
 
-            <div className="flex items-baseline gap-2 pt-1">
-              <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white font-mono">
-                {formatRupiah(totalExpensePeriod)}
-              </h2>
-            </div>
-
-            <p className="text-xs text-emerald-100/70 font-medium">
-              {totalCountPeriod} item transaksi tercatat dan terverifikasi
-            </p>
+            <span className="text-[10px] text-slate-300/80 font-medium">
+              {totalCountPeriod} transaksi
+            </span>
           </div>
 
-          {/* Quick Action Button on Hero */}
-          <div className="flex items-center gap-2">
-            <button
-              id="dash-quick-add-btn"
-              onClick={onNavigateToInput}
-              className="flex-1 sm:flex-initial px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-[#0d2319] font-bold text-xs rounded-xl shadow-soft-md flex items-center justify-center gap-1.5 transition-all duration-150"
-            >
-              <Plus className="w-4 h-4 stroke-[2.5]" />
-              <span>+ Catat Belanja</span>
-            </button>
+          <div>
+            <h3 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight tabular-nums">
+              {formatRupiah(totalExpensePeriod)}
+            </h3>
+          </div>
 
-            <button
-              id="dash-share-wa-btn"
-              onClick={() => onShareWhatsApp(generateWhatsAppReport(filteredTransactions, settings.unitName, getPeriodLabel()))}
-              className="p-2.5 bg-white/10 hover:bg-white/20 active:scale-95 text-white rounded-xl backdrop-blur-xs transition-all duration-150"
-              title="Bagikan Rekap ke WhatsApp"
-            >
-              <Share2 className="w-4 h-4" />
-            </button>
+          <div className="flex items-center justify-between text-xs text-slate-300/90 pt-2 border-t border-white/10 font-medium">
+            <span>Rata-rata belanja aktif</span>
+            <span className="font-bold text-white tabular-nums">
+              {totalCountPeriod > 0
+                ? formatRupiah(Math.round(totalExpensePeriod / totalCountPeriod))
+                : 'Rp 0'}
+              <span className="text-slate-400 font-normal text-[11px]"> /item</span>
+            </span>
           </div>
         </div>
 
-        {/* Decorative ambient subtle circle */}
-        <div className="absolute -right-8 -bottom-8 w-44 h-44 rounded-full bg-emerald-500/10 blur-2xl pointer-events-none" />
+        {/* Subtle decorative glow */}
+        <div className="absolute right-0 bottom-0 w-36 h-36 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
       </div>
 
-      {/* Grid: 3 Breakdown Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      {/* 3 Metric Breakdown Cards */}
+      <div className="grid grid-cols-3 gap-2.5">
         {/* Metric 1: Kas Tunai */}
-        <div className="bg-white rounded-2xl p-4 border border-[#e2e8e2] shadow-soft-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-stone-600 flex items-center gap-1.5">
-              <Banknote className="w-4 h-4 text-emerald-600" />
-              Kas Tunai
+        <div className="bg-white rounded-2xl p-3 border border-slate-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] font-bold text-slate-500 flex items-center gap-1">
+              <Banknote className="w-3.5 h-3.5 text-emerald-600" />
+              Tunai
             </span>
-            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
-              {totalExpensePeriod > 0 ? Math.round((totalTunaiPeriod / totalExpensePeriod) * 100) : 0}%
+            <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200/60">
+              {totalExpensePeriod > 0
+                ? Math.round((totalTunaiPeriod / totalExpensePeriod) * 100)
+                : 0}
+              %
             </span>
           </div>
-          <p className="text-lg sm:text-xl font-extrabold text-[#0d2319] font-mono">
+          <p className="text-xs sm:text-sm font-extrabold text-slate-900 tracking-tight tabular-nums">
             {formatRupiah(totalTunaiPeriod)}
           </p>
-          <p className="text-[11px] text-stone-500 mt-1 font-medium">
-            Pembelian kas/tunai langsung
-          </p>
+          <span className="text-[9px] text-slate-400 font-medium mt-1">Kas langsung</span>
         </div>
 
         {/* Metric 2: Transfer Bank */}
-        <div className="bg-white rounded-2xl p-4 border border-[#e2e8e2] shadow-soft-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-stone-600 flex items-center gap-1.5">
-              <CreditCard className="w-4 h-4 text-sky-600" />
-              Transfer Bank
+        <div className="bg-white rounded-2xl p-3 border border-slate-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] font-bold text-slate-500 flex items-center gap-1">
+              <CreditCard className="w-3.5 h-3.5 text-sky-600" />
+              Transfer
             </span>
-            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200">
-              {totalExpensePeriod > 0 ? Math.round((totalTransferPeriod / totalExpensePeriod) * 100) : 0}%
+            <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded-md bg-sky-50 text-sky-800 border border-sky-200/60">
+              {totalExpensePeriod > 0
+                ? Math.round((totalTransferPeriod / totalExpensePeriod) * 100)
+                : 0}
+              %
             </span>
           </div>
-          <p className="text-lg sm:text-xl font-extrabold text-[#0d2319] font-mono">
+          <p className="text-xs sm:text-sm font-extrabold text-slate-900 tracking-tight tabular-nums">
             {formatRupiah(totalTransferPeriod)}
           </p>
-          <p className="text-[11px] text-stone-500 mt-1 font-medium">
-            Pembayaran vendor non-tunai
-          </p>
+          <span className="text-[9px] text-slate-400 font-medium mt-1">Vendor/bank</span>
         </div>
 
         {/* Metric 3: Estimasi Biaya / Porsi */}
-        <div className="bg-white rounded-2xl p-4 border border-[#e2e8e2] shadow-soft-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-stone-600 flex items-center gap-1.5">
-              <UtensilsCrossed className="w-4 h-4 text-amber-600" />
-              Biaya / Porsi Hari Ini
+        <div className="bg-white rounded-2xl p-3 border border-slate-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] font-bold text-slate-500 flex items-center gap-1">
+              <UtensilsCrossed className="w-3.5 h-3.5 text-amber-600" />
+              / Porsi
             </span>
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200">
-              Target: {estPortions}
+            <span className="text-[9px] font-extrabold px-1 py-0.2 rounded-md bg-amber-50 text-amber-800 border border-amber-200/60">
+              {estPortions}
             </span>
           </div>
-          <p className="text-lg sm:text-xl font-extrabold text-amber-800 font-mono">
+          <p className="text-xs sm:text-sm font-extrabold text-slate-900 tracking-tight tabular-nums">
             {formatRupiah(costPerPortionToday)}
           </p>
-          <p className="text-[11px] text-stone-500 mt-1 font-medium">
-            Alokasi riil per porsi MBG
-          </p>
+          <span className="text-[9px] text-slate-400 font-medium mt-1">Alokasi hari ini</span>
         </div>
       </div>
 
-      {/* Recent Transactions Card */}
-      <div className="bg-white rounded-3xl border border-[#e2e8e2] shadow-soft-sm p-4 sm:p-5 space-y-3.5">
-        <div className="flex items-center justify-between border-b border-[#f0f4f0] pb-3">
+      {/* Transaksi Terkini with Ergonomic Clean Layout */}
+      <div className="bg-white rounded-3xl border border-slate-200/80 p-4 sm:p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] space-y-3">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
           <div className="flex items-center gap-2">
-            <ReceiptText className="w-4 h-4 text-emerald-700" />
-            <h3 className="text-sm font-extrabold text-[#0d2319]">Transaksi Terakhir</h3>
+            <div className="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
+              <ReceiptText className="w-3.5 h-3.5" />
+            </div>
+            <h3 className="text-xs sm:text-sm font-bold text-slate-900">
+              Transaksi Terkini
+            </h3>
           </div>
           <button
-            id="dash-view-all-history"
             onClick={onNavigateToHistory}
-            className="text-xs font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-0.5 transition-colors"
+            className="text-xs font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-0.5"
           >
-            <span>Lihat Semua</span>
+            <span>Semua ({transactions.length})</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
 
         {recentTransactions.length === 0 ? (
-          <div className="py-10 text-center space-y-2">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 mx-auto flex items-center justify-center">
-              <ReceiptText className="w-6 h-6" />
-            </div>
-            <p className="text-xs font-semibold text-stone-600">Belum ada transaksi pengeluaran</p>
-            <p className="text-[11px] text-stone-400">
-              Klik tombol di bawah untuk mencatat pembelian pertama
+          <div className="text-center py-8 space-y-2">
+            <p className="text-xs text-slate-400 font-medium">
+              Belum ada transaksi pengeluaran tercatat.
             </p>
             <button
               onClick={onNavigateToInput}
-              className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 bg-[#0d2319] text-white text-xs font-bold rounded-xl shadow-soft-xs"
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs"
             >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Input Belanja Sekarang</span>
+              + Catat Belanja
             </button>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="divide-y divide-slate-100">
             {recentTransactions.map((t) => {
-              const badge = getCategoryBadgeStyle(t.kategori);
+              const { icon: CatIcon, bg: iconBg, labelBg } = getCategoryIconDetails(t.kategori);
+
               return (
                 <div
                   key={t.id}
                   onClick={() => onSelectTransaction(t)}
-                  className="flex items-center justify-between p-3 rounded-2xl hover:bg-[#f6f8f6] active:bg-[#edf2ed] border border-transparent hover:border-[#e2e8e2] cursor-pointer transition-all duration-150"
+                  className="py-3 flex items-center justify-between gap-3 hover:bg-[#F3F6F4]/60 -mx-2 px-2 rounded-2xl cursor-pointer transition-colors"
                 >
-                  <div className="flex items-start gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-xl bg-[#f0f4f0] text-[#0d2319] flex items-center justify-center flex-shrink-0 font-bold text-xs mt-0.5">
-                      {t.metodeBayar === 'Tunai' ? '💵' : '💳'}
+                  {/* Left: Pastel Circle Icon + Item Details */}
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      className={`w-10 h-10 rounded-2xl border flex items-center justify-center flex-shrink-0 ${iconBg}`}
+                    >
+                      <CatIcon className="w-4 h-4 stroke-[2.2]" />
                     </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${badge.bg} ${badge.border}`}>
+
+                    <div className="min-w-0 space-y-0.5">
+                      <p className="text-xs font-bold text-slate-900 truncate">
+                        {t.item}
+                      </p>
+                      <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium flex-wrap">
+                        <span className={`px-1.5 py-0.2 rounded border text-[9px] font-semibold ${labelBg}`}>
                           {t.kategori}
                         </span>
-                        <span className="text-[10px] text-stone-400 font-mono">
-                          {formatDateShort(t.tanggal)}
+                        <span>•</span>
+                        <span>{t.qty} {t.satuan}</span>
+                        <span>•</span>
+                        <span className="flex items-center gap-0.5">
+                          <Clock className="w-2.5 h-2.5" />
+                          {t.tanggal}
                         </span>
                       </div>
-                      <h4 className="text-xs font-bold text-[#0d2319] truncate mt-1">
-                        {t.item}
-                      </h4>
-                      <p className="text-[11px] text-stone-500 font-medium">
-                        {t.qty} {t.satuan} • {t.metodeBayar}
-                      </p>
                     </div>
                   </div>
 
-                  <div className="text-right flex-shrink-0 pl-2">
-                    <p className="text-xs sm:text-sm font-extrabold text-[#0d2319] font-mono">
+                  {/* Right: Nominal & Status */}
+                  <div className="text-right flex-shrink-0">
+                    <span className="text-xs sm:text-sm font-extrabold text-slate-900 tracking-tight tabular-nums block">
                       {formatRupiah(t.total)}
-                    </p>
+                    </span>
                     <span
-                      className={`inline-block text-[9px] font-bold px-1.5 py-0.2 rounded ${
+                      className={`inline-block text-[8px] font-bold px-1.5 py-0.2 rounded-full ${
                         t.syncStatus === 'pending'
-                          ? 'bg-amber-100 text-amber-800'
-                          : 'bg-emerald-100 text-emerald-800'
+                          ? 'bg-amber-100 text-amber-900'
+                          : 'bg-emerald-100 text-emerald-900'
                       }`}
                     >
-                      {t.syncStatus === 'pending' ? 'Pending Sync' : 'Synced'}
+                      {t.syncStatus === 'pending' ? 'Pending' : 'Synced'}
                     </span>
                   </div>
                 </div>
@@ -343,21 +395,6 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
             })}
           </div>
         )}
-      </div>
-
-      {/* Quick Navigation Footer Link to Reports */}
-      <div className="bg-[#eef4ee] border border-[#d6e2d6] rounded-2xl p-3.5 flex items-center justify-between text-xs">
-        <div className="flex items-center gap-2">
-          <TrendingUp className="w-4 h-4 text-emerald-800" />
-          <span className="font-bold text-[#0d2319]">Ingin melihat rekapitulasi lengkap & cetak slip SPPG?</span>
-        </div>
-        <button
-          onClick={onNavigateToReports}
-          className="font-extrabold text-emerald-800 hover:text-emerald-950 underline flex items-center gap-1"
-        >
-          <span>Buka Laporan</span>
-          <ChevronRight className="w-3.5 h-3.5" />
-        </button>
       </div>
     </div>
   );

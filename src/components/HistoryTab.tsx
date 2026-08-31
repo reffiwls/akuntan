@@ -264,7 +264,7 @@ export const HistoryTab: React.FC<HistoryTabProps> = ({
 
                   {/* Total price */}
                   <div className="text-right flex-shrink-0">
-                    <span className="text-base font-extrabold text-[#0d2319] font-mono block">
+                    <span className="text-base font-black text-slate-900 tracking-tight block">
                       {formatRupiah(t.total)}
                     </span>
                     <span

@@ -132,8 +132,11 @@ export async function postTransactionToGas(
 
   try {
     const payload = {
-      action,
-      data: transaction
+      action: action === 'CREATE' ? 'ADD_TRANSACTION' : 'UPSERT_BATCH',
+      transaction,
+      data: transaction,
+      transactions: [transaction],
+      items: [transaction]
     };
 
     const response = await fetch(gasUrl, {
@@ -177,7 +180,8 @@ export async function deleteTransactionFromGas(
   try {
     const payload = {
       action: 'DELETE',
-      id: transactionId
+      id: transactionId,
+      transactionId
     };
 
     const response = await fetch(gasUrl, {
@@ -215,8 +219,10 @@ export async function batchSyncToGas(
 
   try {
     const payload = {
-      action: 'BATCH_SYNC',
-      items: transactions
+      action: 'UPSERT_BATCH',
+      transactions,
+      items: transactions,
+      data: transactions
     };
 
     const response = await fetch(gasUrl, {
@@ -229,11 +235,12 @@ export async function batchSyncToGas(
 
     const resData = await response.json();
     if (resData.status === 'success') {
+      const syncedCount = resData.totalSynced || resData.inserted + resData.updated || transactions.length;
       return {
         success: true,
-        message: `Sinkronisasi tuntas! ${resData.totalSynced || transactions.length} data tersinkron ke Google Sheets.`,
-        addedCount: resData.addedCount,
-        updatedCount: resData.updatedCount
+        message: `Sinkronisasi tuntas! ${syncedCount} data tersinkron ke Google Sheets.`,
+        addedCount: resData.inserted || resData.addedCount || transactions.length,
+        updatedCount: resData.updated || resData.updatedCount || 0
       };
     } else {
       return {

@@ -227,7 +227,7 @@ export const ReportTab: React.FC<ReportTabProps> = ({
             <span className="text-[10px] uppercase font-bold text-emerald-300 tracking-wider">
               Total Pengeluaran ({rangeLabel()})
             </span>
-            <h3 className="text-2xl sm:text-3xl font-extrabold font-mono text-white">
+            <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
               {formatRupiah(totalAmount)}
             </h3>
             <p className="text-xs text-emerald-100/70 font-medium">
@@ -238,13 +238,13 @@ export const ReportTab: React.FC<ReportTabProps> = ({
           <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-white/10">
             <div className="bg-white/10 p-2.5 rounded-xl border border-white/10">
               <span className="text-[10px] text-emerald-200/80 font-bold block">Kas Tunai</span>
-              <span className="text-xs sm:text-sm font-extrabold font-mono text-white">
+              <span className="text-xs sm:text-sm font-black text-white tracking-tight">
                 {formatRupiah(totalTunai)}
               </span>
             </div>
             <div className="bg-white/10 p-2.5 rounded-xl border border-white/10">
               <span className="text-[10px] text-sky-200/80 font-bold block">Transfer Bank</span>
-              <span className="text-xs sm:text-sm font-extrabold font-mono text-white">
+              <span className="text-xs sm:text-sm font-black text-white tracking-tight">
                 {formatRupiah(totalTransfer)}
               </span>
             </div>

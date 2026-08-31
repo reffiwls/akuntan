@@ -38,12 +38,12 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   ];
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 pointer-events-none flex justify-center px-4 pb-[max(0.75rem,env(safe-area-inset-bottom,0.75rem))] pt-2 print:hidden">
+    <div className="fixed inset-x-0 bottom-0 z-40 pointer-events-none flex justify-center px-4 mb-4 pb-[env(safe-area-inset-bottom,0px)] print:hidden">
       <nav
         id="bottom-navigation"
-        className="pointer-events-auto w-full max-w-md bg-white/95 backdrop-blur-md border border-[#e2e8e2] rounded-3xl shadow-floating px-2 py-1.5 transition-all duration-200"
+        className="pointer-events-auto w-full max-w-md bg-[#0D281E]/95 border border-emerald-500/20 rounded-3xl shadow-[0_16px_36px_rgba(0,0,0,0.35)] p-1.5 backdrop-blur-md"
       >
-        <div className="flex items-center justify-between">
+        <div className="flex items-stretch justify-between gap-1">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             const Icon = tab.icon;
@@ -53,37 +53,37 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                 key={tab.id}
                 id={`nav-${tab.id}`}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 relative flex flex-col items-center py-2 px-1 rounded-2xl min-h-[48px] justify-center transition-all duration-150 active:scale-95 ${
+                className={`relative flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-2xl min-h-[54px] transition-all duration-150 active:scale-95 ${
                   isActive
-                    ? 'text-emerald-900 font-bold'
-                    : 'text-slate-400 hover:text-slate-700 font-medium'
+                    ? 'bg-emerald-500/20 border border-emerald-400/35 text-white shadow-inner'
+                    : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
                 }`}
                 aria-label={`Buka Tab ${tab.label}`}
               >
-                <div className="relative">
+                {/* Icon with pending badge */}
+                <div className="relative flex items-center justify-center">
                   <Icon
                     className={`w-5 h-5 transition-transform duration-150 ${
                       isActive
-                        ? 'stroke-[2.4] text-emerald-800 scale-105'
-                        : 'stroke-[1.8] text-slate-400'
+                        ? 'text-emerald-400 stroke-[2.4] scale-105'
+                        : 'text-slate-400 stroke-[2]'
                     }`}
                   />
                   {tab.badge && (
-                    <span className="absolute -top-1 -right-2 px-1.5 py-0.2 text-[9px] font-bold bg-amber-500 text-white rounded-full shadow-xs">
+                    <span className="absolute -top-1.5 -right-2.5 min-w-[17px] h-[17px] px-1 flex items-center justify-center text-[9px] font-black bg-amber-400 text-[#0D281E] rounded-full ring-2 ring-[#0D281E] shadow-sm animate-pulse">
                       {tab.badge}
                     </span>
                   )}
                 </div>
+
+                {/* Tab Label */}
                 <span
-                  className={`text-[11px] mt-1 tracking-tight leading-none ${
-                    isActive ? 'text-emerald-900 font-extrabold' : 'text-slate-400 font-medium'
+                  className={`text-[11px] mt-1 tracking-tight text-center leading-none whitespace-nowrap ${
+                    isActive ? 'text-emerald-300 font-extrabold' : 'text-slate-400 font-medium'
                   }`}
                 >
                   {tab.label}
                 </span>
-                {isActive && (
-                  <span className="absolute bottom-0.5 w-5 h-0.5 bg-emerald-700 rounded-full" />
-                )}
               </button>
             );
           })}

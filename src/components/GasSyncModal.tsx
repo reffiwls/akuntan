@@ -134,38 +134,72 @@ function doPost(e) {
     let postData = null;
     
     if (e.postData && e.postData.contents) {
-      postData = JSON.parse(e.postData.contents);
+      try {
+        postData = JSON.parse(e.postData.contents);
+      } catch (parseErr) {
+        return createJsonResponse({ status: 'error', message: 'Format JSON payload tidak valid' });
+      }
     }
     
     if (!postData) {
-      return createJsonResponse({ status: 'error', message: 'Tidak ada payload data' });
+      return createJsonResponse({ status: 'error', message: 'Tidak ada payload data yang diterima' });
     }
     
-    const action = postData.action || 'UPSERT_BATCH';
+    const rawAction = String(postData.action || '').toUpperCase().trim();
     
-    if (action === 'ADD_TRANSACTION' && postData.transaction) {
-      const t = postData.transaction;
-      sheet.appendRow([
-        t.id,
-        t.tanggal,
-        t.kategori,
-        t.item,
-        t.qty,
-        t.satuan,
-        t.hargaSatuan,
-        t.total,
-        t.metodeBayar,
-        t.catatan,
-        t.createdAt || new Date().toISOString()
-      ]);
-      return createJsonResponse({ status: 'success', message: 'Transaksi berhasil disimpan', id: t.id });
-    }
-    
-    if (action === 'UPSERT_BATCH' && postData.transactions && Array.isArray(postData.transactions)) {
-      const items = postData.transactions;
-      const lastRow = sheet.getLastRow();
+    // 1. DELETE ACTION
+    if (rawAction === 'DELETE' || rawAction === 'REMOVE') {
+      const targetId = String(postData.id || postData.transactionId || (postData.data && postData.data.id) || '');
+      if (!targetId) {
+        return createJsonResponse({ status: 'error', message: 'ID transaksi untuk hapus tidak ditemukan' });
+      }
       
+      const lastRow = sheet.getLastRow();
+      let deleted = false;
+      if (lastRow > 1) {
+        const idColValues = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+        for (let i = 0; i < idColValues.length; i++) {
+          if (String(idColValues[i][0]) === targetId) {
+            sheet.deleteRow(i + 2);
+            deleted = true;
+            break;
+          }
+        }
+      }
+      return createJsonResponse({
+        status: 'success',
+        message: deleted ? 'Transaksi berhasil dihapus' : 'Transaksi tidak ditemukan (sudah terhapus)',
+        id: targetId
+      });
+    }
+    
+    // 2. SINGLE TRANSACTION ADD/CREATE ACTION
+    if (rawAction === 'ADD_TRANSACTION' || rawAction === 'CREATE' || rawAction === 'ADD' || rawAction === 'INSERT') {
+      const t = postData.transaction || postData.data || postData.item;
+      if (t && t.id) {
+        sheet.appendRow([
+          t.id,
+          t.tanggal || '',
+          t.kategori || 'Lain-lain',
+          t.item || '',
+          t.qty || 1,
+          t.satuan || 'Kg',
+          t.hargaSatuan || 0,
+          t.total || 0,
+          t.metodeBayar || 'Tunai',
+          t.catatan || '',
+          t.createdAt || new Date().toISOString()
+        ]);
+        return createJsonResponse({ status: 'success', message: 'Transaksi berhasil disimpan', id: t.id });
+      }
+    }
+    
+    // 3. BATCH SYNC / UPSERT ACTION (BATCH_SYNC, UPSERT_BATCH, SYNC_BATCH, or Default Array)
+    const items = postData.transactions || postData.items || postData.data;
+    if (Array.isArray(items)) {
+      const lastRow = sheet.getLastRow();
       const existingIds = {};
+      
       if (lastRow > 1) {
         const idColValues = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
         for (let i = 0; i < idColValues.length; i++) {
@@ -180,18 +214,18 @@ function doPost(e) {
       let updatedCount = 0;
       
       items.forEach(function(t) {
-        if (!t.id) return;
+        if (!t || !t.id) return;
         const rowData = [
           t.id,
-          t.tanggal,
-          t.kategori,
-          t.item,
-          t.qty,
-          t.satuan,
-          t.hargaSatuan,
-          t.total,
-          t.metodeBayar,
-          t.catatan,
+          t.tanggal || '',
+          t.kategori || 'Lain-lain',
+          t.item || '',
+          t.qty || 1,
+          t.satuan || 'Kg',
+          t.hargaSatuan || 0,
+          t.total || 0,
+          t.metodeBayar || 'Tunai',
+          t.catatan || '',
           t.createdAt || new Date().toISOString()
         ];
         
@@ -209,11 +243,15 @@ function doPost(e) {
         status: 'success',
         message: 'Sync batch berhasil',
         inserted: insertedCount,
-        updated: updatedCount
+        updated: updatedCount,
+        totalSynced: insertedCount + updatedCount
       });
     }
     
-    return createJsonResponse({ status: 'error', message: 'Aksi tidak dikenali: ' + action });
+    return createJsonResponse({
+      status: 'error',
+      message: 'Aksi atau payload tidak dikenali: ' + (rawAction || 'KOSONG')
+    });
   } catch (err) {
     return createJsonResponse({ status: 'error', message: err.toString() });
   }

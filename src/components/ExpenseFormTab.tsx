@@ -32,6 +32,7 @@ import {
 interface ExpenseFormTabProps {
   onSave: (transaction: Omit<Transaction, 'id' | 'createdAt' | 'syncStatus'>, inputAgain: boolean) => void;
   cashierName?: string;
+  onOpenSmartImport?: () => void;
 }
 
 // Common fast-entry items for MBG catering
@@ -52,7 +53,11 @@ const QUICK_PRESETS: Array<{
   { label: '⛽ Bensin Armada', category: 'Logistik & Distribusi', item: 'Bensin Operasional Pengantaran Sekolah', satuan: 'Liter', defaultPrice: 10000 }
 ];
 
-export const ExpenseFormTab: React.FC<ExpenseFormTabProps> = ({ onSave, cashierName }) => {
+export const ExpenseFormTab: React.FC<ExpenseFormTabProps> = ({
+  onSave,
+  cashierName,
+  onOpenSmartImport
+}) => {
   const todayStr = new Date().toISOString().slice(0, 10);
   const itemNameInputRef = useRef<HTMLInputElement>(null);
 
@@ -192,7 +197,42 @@ export const ExpenseFormTab: React.FC<ExpenseFormTabProps> = ({ onSave, cashierN
   };
 
   return (
-    <div className="max-w-md mx-auto space-y-3.5 pb-28 pt-1">
+    <div className="max-w-md mx-auto space-y-3.5 pb-36 pt-1">
+      {/* Smart AI Import Banner */}
+      {onOpenSmartImport && (
+        <div
+          onClick={onOpenSmartImport}
+          className="bg-gradient-to-r from-slate-900 via-[#102a1e] to-emerald-950 rounded-2xl p-3.5 text-white shadow-md border border-emerald-600/40 flex items-center justify-between gap-3 cursor-pointer hover:border-emerald-400 transition-all group active:scale-[0.99]"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 text-slate-950 flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-105 transition-transform">
+              <Sparkles className="w-5 h-5 stroke-[2.5]" />
+            </div>
+            <div className="min-w-0">
+              <span className="text-[10px] uppercase font-black tracking-wider text-emerald-300 bg-emerald-950/80 px-1.5 py-0.2 rounded border border-emerald-700/60 inline-block mb-0.5">
+                Hemat Waktu
+              </span>
+              <h3 className="text-xs font-black text-white truncate">
+                Punya Rekap Excel / Chat Belanja?
+              </h3>
+              <p className="text-[11px] text-emerald-100/70 font-medium truncate">
+                Import cerdas & edit live pratinjau sebelum simpan
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenSmartImport();
+            }}
+            className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-black text-xs rounded-xl shadow-xs flex-shrink-0 transition-all"
+          >
+            Buka AI
+          </button>
+        </div>
+      )}
+
       {/* Draft Recovery Alert */}
       {hasDraftLoaded && (
         <div className="bg-emerald-50 border border-emerald-200 text-emerald-900 px-3.5 py-2.5 rounded-2xl text-xs flex items-center justify-between shadow-soft-xs">
@@ -374,7 +414,7 @@ export const ExpenseFormTab: React.FC<ExpenseFormTabProps> = ({ onSave, cashierN
 
           {!isCustomTotal ? (
             <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-stone-400 font-mono">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
                 Rp
               </span>
               <input
@@ -384,13 +424,13 @@ export const ExpenseFormTab: React.FC<ExpenseFormTabProps> = ({ onSave, cashierN
                 placeholder="0"
                 value={hargaSatuanRaw}
                 onChange={(e) => setHargaSatuanRaw(formatInputNumber(e.target.value))}
-                className="w-full pl-10 pr-3.5 py-2.5 bg-[#f8faf8] border border-[#d6e0d6] rounded-xl text-sm font-extrabold text-[#0d2319] placeholder:text-stone-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/30 focus:border-emerald-600 font-mono transition-all"
+                className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-extrabold text-slate-900 placeholder:text-slate-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/30 focus:border-emerald-600 tabular-nums transition-all"
                 required={!isCustomTotal}
               />
             </div>
           ) : (
             <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-stone-400 font-mono">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
                 Rp
               </span>
               <input
@@ -400,7 +440,7 @@ export const ExpenseFormTab: React.FC<ExpenseFormTabProps> = ({ onSave, cashierN
                 placeholder="0"
                 value={customTotalRaw}
                 onChange={(e) => setCustomTotalRaw(formatInputNumber(e.target.value))}
-                className="w-full pl-10 pr-3.5 py-2.5 bg-[#f8faf8] border border-[#d6e0d6] rounded-xl text-sm font-extrabold text-[#0d2319] placeholder:text-stone-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/30 focus:border-emerald-600 font-mono transition-all"
+                className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-extrabold text-slate-900 placeholder:text-slate-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/30 focus:border-emerald-600 tabular-nums transition-all"
                 required={isCustomTotal}
               />
             </div>
@@ -408,13 +448,13 @@ export const ExpenseFormTab: React.FC<ExpenseFormTabProps> = ({ onSave, cashierN
         </div>
 
         {/* Dynamic Computed Total Card (Clean & Professional, No Heavy Badges) */}
-        <div className="bg-[#f0f6f2] border border-[#cfe2d4] rounded-2xl p-4 flex items-center justify-between transition-all">
+        <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-4 flex items-center justify-between transition-all">
           <div className="space-y-1 min-w-0">
-            <span className="text-xs font-semibold text-stone-700 flex items-center gap-1.5">
+            <span className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
               <Calculator className="w-3.5 h-3.5 text-emerald-800" />
               Total Pengeluaran
             </span>
-            <p className="text-xs text-stone-500 font-medium truncate">
+            <p className="text-xs text-slate-500 font-medium truncate">
               {!isCustomTotal && qtyNumber > 0 && hargaNumber > 0
                 ? `${qty} ${satuan} × ${formatRupiah(hargaNumber)}`
                 : isCustomTotal
@@ -423,7 +463,7 @@ export const ExpenseFormTab: React.FC<ExpenseFormTabProps> = ({ onSave, cashierN
             </p>
           </div>
           <div className="text-right pl-2 flex-shrink-0">
-            <span className="text-2xl font-extrabold font-mono text-[#0d2319] tracking-tight">
+            <span className="text-2xl font-extrabold text-[#0D281E] tracking-tight tabular-nums">
               {formatRupiah(currentTotal)}
             </span>
           </div>
